@@ -1,0 +1,31 @@
+---
+name: untrusted
+description: Evaluate configs that are not fully trusted (CI on PR code, catalog previews).
+type: bool
+env:
+  - TG_UNTRUSTED
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+When enabled, Terragrunt hardens itself against HCL configs that may be adversarial — for example, when a CI system runs `terragrunt plan` on a pull-request branch before review. The flag gates HCL-controlled surfaces that could execute arbitrary code, write outside the working directory, or read files and environment variables outside the repository.
+
+Specifically, `--untrusted` does the following:
+
+- **Blocks** `run_cmd()` and all hooks (`before_hook`, `after_hook`, `error_hook`), including the tflint special-case
+- **Blocks** `get_env()`
+- **Confines** `file()`, `templatefile()`, `fileexists()`, `filebase64()`, the `filesha*()` family, `fileset()`, `read_tfvars_file()`, and `sops_decrypt_file()` to paths inside the git repository root
+- **Confines** `generate` block writes (including `remote_state { generate { ... } }`) to the working directory
+- **Drops** `extra_arguments` blocks entirely — `env_vars`, `arguments`, and var-files never reach the OpenTofu/Terraform subprocess
+- **Ignores** HCL `download_dir` and `terraform_binary` attributes (CLI values still apply)
+- **Rejects** symbolic links in the source tree that resolve outside it
+- **Keeps** go-getter's default symbolic-link rejection during source download (the `preserveSymlinksOption` is not applied)
+- **Propagates** through `dependency` blocks and `read_terragrunt_config()` — nested evaluation inherits the same gates
+
+<Aside type="note">
+Surfaces that OpenTofu/Terraform `.tf` content can do equivalently — IAM role assumption via `provider { assume_role { ... } }`, network calls via data sources, provider plugin downloads — are intentionally **not** gated. Handle those with role trust policies and `.tf` scanning in your CI pipeline. The scope of `--untrusted` is the surfaces that Terragrunt itself introduces on top of what plain `.tf` can already do.
+</Aside>
+
+<Aside type="caution">
+`--untrusted` is a defense-in-depth measure, not a sandbox. The gates were enumerated through adversarial code audit of a specific Terragrunt version. New versions may introduce new HCL-controlled surfaces that are not yet gated. If you rely on `--untrusted` for security, review the diff when upgrading Terragrunt.
+</Aside>
