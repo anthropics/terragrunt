@@ -104,7 +104,7 @@ func processErrorHooks(
 				actionParams := curHook.Execute[1:]
 				hookOpts := optsWithHookEnvs(opts, curHook.Name)
 
-				_, possibleError := shell.RunCommandWithOutput(
+				_, possibleError := shell.RunHclCommandWithOutput(
 					ctx,
 					l,
 					hookOpts.shellRunOptions(),
@@ -204,11 +204,11 @@ func runHook(
 	actionParams := curHook.Execute[1:]
 	hookOpts := optsWithHookEnvs(opts, curHook.Name)
 
-	if actionToExecute == "tflint" {
+	if actionToExecute == "tflint" && !opts.Untrusted {
 		return executeTFLint(ctx, l, opts, cfg, curHook, workingDir)
 	}
 
-	_, possibleError := shell.RunCommandWithOutput(
+	_, possibleError := shell.RunHclCommandWithOutput(
 		ctx,
 		l,
 		hookOpts.shellRunOptions(),

@@ -119,7 +119,7 @@ func PrepareSource(
 
 	// if the download dir hasn't been changed from default, and is set in the config,
 	// then use it
-	if opts.DownloadDir == defaultDownloadDir && runCfg.DownloadDir != "" {
+	if opts.DownloadDir == defaultDownloadDir && runCfg.DownloadDir != "" && !opts.Untrusted {
 		opts.DownloadDir = runCfg.DownloadDir
 	}
 

@@ -67,6 +67,12 @@ func DownloadTerraformSource(
 		util.RelPathForLog(opts.RootWorkingDir, terraformSource.WorkingDir, opts.Writers.LogShowAbsPaths),
 	)
 
+	if opts.Untrusted {
+		if err := CheckSourceSymlinksConfined(opts.WorkingDir); err != nil {
+			return nil, err
+		}
+	}
+
 	// Always include the .tflint.hcl file, if it exists
 	includeInCopy := slices.Concat(cfg.Terraform.IncludeInCopy, []string{tfLintConfig})
 
@@ -277,6 +283,7 @@ func UpdateGetters(l log.Logger, opts *Options, cfg *runcfg.RunConfig) func(*get
 			Logger:          l,
 			IncludeInCopy:   cfg.Terraform.IncludeInCopy,
 			ExcludeFromCopy: cfg.Terraform.ExcludeFromCopy,
+			Untrusted:       opts.Untrusted,
 		}
 		client.Getters["http"] = &getter.HttpGetter{Netrc: true}
 		client.Getters["https"] = &getter.HttpGetter{Netrc: true}
@@ -375,8 +382,13 @@ func downloadSource(
 	}
 
 	// Fallback to standard go-getter
+	getterOpts := []getter.ClientOption{UpdateGetters(l, opts, cfg)}
+	if !opts.Untrusted {
+		getterOpts = append(getterOpts, preserveSymlinksOption())
+	}
+
 	return opts.RunWithErrorHandling(ctx, l, r, func() error {
-		return getter.GetAny(src.DownloadDir, src.CanonicalSourceURL.String(), UpdateGetters(l, opts, cfg), preserveSymlinksOption())
+		return getter.GetAny(src.DownloadDir, src.CanonicalSourceURL.String(), getterOpts...)
 	})
 }
 

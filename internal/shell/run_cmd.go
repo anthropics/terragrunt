@@ -43,6 +43,17 @@ type ShellOptions struct {
 	Experiments     experiment.Experiments
 	Headless        bool
 	ForwardTFStdout bool
+	Untrusted       bool
+}
+
+// HclExecDisabledError is returned when a command originating from HCL config
+// (run_cmd, hooks) is blocked by --untrusted.
+type HclExecDisabledError struct {
+	Command string
+}
+
+func (e HclExecDisabledError) Error() string {
+	return fmt.Sprintf("execution of HCL-sourced command %q is blocked by --untrusted", e.Command)
 }
 
 // NoEngine returns true if the user explicitly disabled the engine via --no-engine.
@@ -57,6 +68,28 @@ func RunCommand(ctx context.Context, l log.Logger, runOpts *ShellOptions, comman
 	_, err := RunCommandWithOutput(ctx, l, runOpts, "", false, false, command, args...)
 
 	return err
+}
+
+// RunHclCommandWithOutput runs a command whose name and arguments originate
+// from user-controlled HCL config (run_cmd, before_hook/after_hook/error_hook).
+// It refuses to execute when --untrusted is set. Callers that exec HCL-sourced
+// commands MUST use this instead of RunCommandWithOutput; grep
+// RunHclCommandWithOutput to audit the surface.
+func RunHclCommandWithOutput(
+	ctx context.Context,
+	l log.Logger,
+	runOpts *ShellOptions,
+	workingDir string,
+	suppressStdout bool,
+	needsPTY bool,
+	command string,
+	args ...string,
+) (*util.CmdOutput, error) {
+	if runOpts.Untrusted {
+		return nil, errors.New(HclExecDisabledError{Command: command})
+	}
+
+	return RunCommandWithOutput(ctx, l, runOpts, workingDir, suppressStdout, needsPTY, command, args...)
 }
 
 // RunCommandWithOutput runs the specified shell command with the specified arguments.

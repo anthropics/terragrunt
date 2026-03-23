@@ -1101,6 +1101,12 @@ func getTerragruntOutputJSONFromRemoteState(
 		}
 	}
 
+	if pctx.Untrusted {
+		if err := run.CheckGeneratePathConfined(remoteState.Generate.Path, tempWorkDir); err != nil {
+			return nil, err
+		}
+	}
+
 	if err := remoteState.GenerateOpenTofuCode(l, tempWorkDir); err != nil {
 		return nil, err
 	}
@@ -1287,6 +1293,7 @@ func runTerragruntOutputJSON(ctx context.Context, pctx *ParsingContext, l log.Lo
 		ForwardTFStdout:              false,
 		JSONLogFormat:                false,
 		Headless:                     pctx.Headless,
+		Untrusted:                    pctx.Untrusted,
 		Debug:                        pctx.Debug,
 		AutoInit:                     pctx.AutoInit,
 		BackendBootstrap:             pctx.BackendBootstrap,
@@ -1326,6 +1333,7 @@ func shellRunOptsFromPctx(pctx *ParsingContext) *shell.ShellOptions {
 		RootWorkingDir:  pctx.RootWorkingDir,
 		Headless:        pctx.Headless,
 		ForwardTFStdout: pctx.ForwardTFStdout,
+		Untrusted:       pctx.Untrusted,
 	}
 }
 

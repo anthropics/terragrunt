@@ -92,6 +92,7 @@ type ParsingContext struct {
 	Debug               bool
 	AutoInit            bool
 	Headless            bool
+	Untrusted           bool
 	BackendBootstrap    bool
 	CheckDependentUnits bool
 

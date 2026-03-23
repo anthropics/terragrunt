@@ -24,6 +24,8 @@ type FileCopyGetter struct {
 	// Terragrunt, which will skip hidden folders.
 	IncludeInCopy   []string
 	ExcludeFromCopy []string
+
+	Untrusted bool
 }
 
 // Get replaces the original FileGetter
@@ -40,6 +42,12 @@ func (g *FileCopyGetter) Get(dst string, u *url.URL) error {
 		return errors.Errorf("source path error: %s", err)
 	} else if !fi.IsDir() {
 		return errors.Errorf("source path must be a directory")
+	}
+
+	if g.Untrusted {
+		if err := CheckSourceSymlinksConfined(path); err != nil {
+			return err
+		}
 	}
 
 	return util.CopyFolderContents(g.Logger, path, dst, SourceManifestName, g.IncludeInCopy, g.ExcludeFromCopy)

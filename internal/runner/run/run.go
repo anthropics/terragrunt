@@ -133,7 +133,7 @@ func Run(
 
 	// if the download dir hasn't been changed from default, and is set in the config,
 	// then use it
-	if opts.DownloadDir == defaultDownloadDir && cfg.DownloadDir != "" {
+	if opts.DownloadDir == defaultDownloadDir && cfg.DownloadDir != "" && !opts.Untrusted {
 		opts.DownloadDir = cfg.DownloadDir
 	}
 
@@ -192,12 +192,24 @@ func GenerateConfig(l log.Logger, opts *Options, cfg *runcfg.RunConfig) error {
 	defer actualLock.Unlock()
 
 	for _, genCfg := range cfg.GenerateConfigs {
+		if opts.Untrusted {
+			if err := CheckGeneratePathConfined(genCfg.Path, opts.WorkingDir); err != nil {
+				return err
+			}
+		}
+
 		if err := codegen.WriteToFile(l, opts.WorkingDir, &genCfg); err != nil {
 			return err
 		}
 	}
 
 	if cfg.RemoteState.Config != nil && cfg.RemoteState.Generate != nil {
+		if opts.Untrusted {
+			if err := CheckGeneratePathConfined(cfg.RemoteState.Generate.Path, opts.WorkingDir); err != nil {
+				return err
+			}
+		}
+
 		if err := cfg.RemoteState.GenerateOpenTofuCode(l, opts.WorkingDir); err != nil {
 			return err
 		}
@@ -231,7 +243,7 @@ func runTerragruntWithConfig(
 		return nil
 	}
 
-	if len(cfg.Terraform.ExtraArgs) > 0 {
+	if len(cfg.Terraform.ExtraArgs) > 0 && !opts.Untrusted {
 		args := FilterTerraformExtraArgs(l, opts, cfg)
 
 		opts.InsertTerraformCliArgs(args...)

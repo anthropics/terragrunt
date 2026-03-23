@@ -66,6 +66,7 @@ type Options struct {
 	MaxFoldersToCheck            int
 	AutoRetry                    bool
 	Headless                     bool
+	Untrusted                    bool
 	NonInteractive               bool
 	Debug                        bool
 	AutoInit                     bool
@@ -191,6 +192,7 @@ func (o *Options) shellRunOptions() *shell.ShellOptions {
 		RootWorkingDir:  o.RootWorkingDir,
 		Headless:        o.Headless,
 		ForwardTFStdout: o.ForwardTFStdout,
+		Untrusted:       o.Untrusted,
 	}
 }
 

@@ -29,6 +29,7 @@ const (
 
 	NonInteractiveFlagName = "non-interactive"
 	WorkingDirFlagName     = "working-dir"
+	UntrustedFlagName      = "untrusted"
 
 	// Strict Mode related flags.
 
@@ -175,6 +176,24 @@ func NewFlags(l log.Logger, opts *options.TerragruntOptions, prefix flags.Prefix
 				Negative: true,
 				EnvVars:  flags.Prefix{}.EnvVars(DeprecatedTFInputFlagName),
 			}, nil, terragruntPrefixControl)),
+
+		flags.NewFlag(&clihelper.BoolFlag{
+			Name:    UntrustedFlagName,
+			EnvVars: tgPrefix.EnvVars(UntrustedFlagName),
+			Usage: "Evaluate configs that are not fully trusted (CI on PR code, catalog previews). " +
+				"Blocks run_cmd, hooks, and get_env; confines file()/templatefile()/etc. and " +
+				"generate writes to the repo root; drops extra_arguments; ignores HCL " +
+				"download_dir and terraform_binary; rejects source symlinks that escape " +
+				"the tree. Surfaces that terraform .tf can do equivalently " +
+				"(role assumption, data sources) are not gated — handle those with role " +
+				"trust policies and .tf scanning.",
+			Setter: func(_ bool) error {
+				opts.Untrusted = true
+				opts.TFPathExplicitlySet = true
+
+				return nil
+			},
+		}),
 
 		// Experiment Mode flags.
 

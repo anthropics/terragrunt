@@ -215,6 +215,12 @@ func createTerragruntEvalContext(ctx context.Context, pctx *ParsingContext, l lo
 	maps.Copy(functions, terragruntFunctions)
 	maps.Copy(functions, pctx.PredefinedFunctions)
 
+	if pctx.Untrusted {
+		if err := applyUntrustedConfinement(ctx, l, pctx, functions, tfscope.BaseDir); err != nil {
+			return nil, err
+		}
+	}
+
 	evalCtx := &hcl.EvalContext{
 		Functions: functions,
 	}
@@ -555,7 +561,7 @@ func runCommandImpl(ctx context.Context, pctx *ParsingContext, l log.Logger, arg
 		}
 	}
 
-	cmdOutput, err := shell.RunCommandWithOutput(
+	cmdOutput, err := shell.RunHclCommandWithOutput(
 		ctx,
 		l,
 		shellRunOptsFromPctx(pctx),

@@ -58,6 +58,7 @@ func populateFromOpts(pctx *config.ParsingContext, opts *options.TerragruntOptio
 	pctx.Debug = opts.Debug
 	pctx.AutoInit = opts.AutoInit
 	pctx.Headless = opts.Headless
+	pctx.Untrusted = opts.Untrusted
 	pctx.BackendBootstrap = opts.BackendBootstrap
 	pctx.CheckDependentUnits = opts.CheckDependentUnits
 	pctx.Telemetry = opts.Telemetry
@@ -81,6 +82,7 @@ func ShellRunOptsFromOpts(opts *options.TerragruntOptions) *shell.ShellOptions {
 		RootWorkingDir:  opts.RootWorkingDir,
 		Headless:        opts.Headless,
 		ForwardTFStdout: opts.ForwardTFStdout,
+		Untrusted:       opts.Untrusted,
 	}
 }
 
@@ -145,6 +147,7 @@ func NewRunOptions(opts *options.TerragruntOptions) *run.Options {
 		ForwardTFStdout:              opts.ForwardTFStdout,
 		JSONLogFormat:                opts.JSONLogFormat,
 		Headless:                     opts.Headless,
+		Untrusted:                    opts.Untrusted,
 		NonInteractive:               opts.NonInteractive,
 		Debug:                        opts.Debug,
 		AutoInit:                     opts.AutoInit,

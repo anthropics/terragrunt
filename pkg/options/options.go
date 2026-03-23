@@ -235,6 +235,11 @@ type TerragruntOptions struct {
 	DisableLogFormatting bool
 	// Headless is set when Terragrunt is running in headless mode.
 	Headless bool
+	// Untrusted hardens terragrunt against PR-controlled HCL: blocks run_cmd
+	// and hooks, confines generate writes to the working dir, drops
+	// extra_arguments, ignores HCL download_dir, and keeps go-getter's default
+	// symlink rejection. See --untrusted flag help.
+	Untrusted bool
 	// NoStackGenerate disable stack generation.
 	NoStackGenerate bool
 	// NoStackValidate disable generated stack validation.
